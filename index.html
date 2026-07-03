@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoceSpace — Avo Settings</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="settings-page">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">Avo settings</span>
+      <span class="brand-sub">your camera-free presence</span>
+    </div>
+    <span class="save-state" id="save-state">unsaved</span>
+  </header>
+
+  <main class="settings-layout">
+    <!-- Live preview -->
+    <section class="card preview-card">
+      <h2>Preview</h2>
+      <p class="card-sub">Talk to it, click to poke, rub the cursor over it to pet it.</p>
+      <div class="preview-tile">
+        <div id="preview-holder"></div>
+        <div class="badge"><span class="badge-name" id="preview-name">Han</span></div>
+      </div>
+      <div class="mic-row">
+        <button id="mic-btn" class="btn primary">🎙 Test with mic</button>
+        <button id="sim-btn" class="btn ghost">Simulate voice</button>
+      </div>
+      <div class="level-meter"><div id="level-fill"></div></div>
+      <div class="mic-row">
+        <button id="poke-btn" class="btn ghost">👉 Poke</button>
+        <button id="pet-btn" class="btn ghost">🤚 Pet</button>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section class="card">
+      <h2>Customize</h2>
+
+      <label class="field">
+        <span>Display name <em>(seeds the personality)</em></span>
+        <input id="name-input" type="text" maxlength="20" />
+      </label>
+
+      <label class="field">
+        <span>Style</span>
+        <div class="seg" id="style-seg"></div>
+      </label>
+
+      <label class="field">
+        <span>Color <em>(all harmonic with the theme)</em></span>
+        <div class="swatches" id="swatches"></div>
+      </label>
+
+      <label class="field">
+        <span>Energy <em id="energy-val"></em></span>
+        <input id="energy" type="range" min="0.1" max="1" step="0.05" />
+      </label>
+
+      <div class="row-2">
+        <button id="shuffle-btn" class="btn ghost">🎲 Shuffle look</button>
+        <button id="reset-btn" class="btn ghost">Reset</button>
+      </div>
+
+      <button id="save-avo-btn" class="btn primary wide">💾 Save Avo</button>
+
+      <div class="row-2">
+        <button id="export-btn" class="btn ghost">Export JSON</button>
+        <button id="import-btn" class="btn ghost">Import JSON</button>
+        <input type="file" id="import-file" accept=".json,application/json" hidden />
+      </div>
+
+      <div class="saved-wrap">
+        <span class="saved-label">Saved Avos</span>
+        <ul id="saved-list" class="saved-list"></ul>
+        <p id="saved-empty" class="saved-empty">No saved Avos yet — customize one and hit Save.</p>
+      </div>
+
+      <div class="footnote">
+        Save sets your active avatar for the room. Export shares the 5 params as a
+        <code>.avo.json</code> file.
+      </div>
+    </section>
+
+    <!-- Integration guide for the VoceSpace team -->
+    <section class="card wide-card integrate-section">
+      <h2>Integration</h2>
+      <p class="card-sub">
+        Drop <code>js/avo.js</code> + p5.js into VoceSpace. Each client renders Avos
+        locally from 5 serializable params — no images, no video tracks.
+      </p>
+
+      <div class="integrate-block">
+        <h3>1 · Files to copy</h3>
+        <table class="integrate-table">
+          <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>js/avo.js</code></td><td>Widget — rendering + <code>Avo.mount()</code></td></tr>
+            <tr><td><code>lib/p5.min.js</code></td><td>Only dependency (<code>npm install p5</code> also works)</td></tr>
+            <tr><td><code>js/settings.js</code></td><td>Template for this settings page (optional)</td></tr>
+            <tr><td><code>js/audio.js</code></td><td>Mic test on settings only — not needed in the room</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="integrate-block">
+        <h3>2 · Store params per user</h3>
+        <p class="integrate-note">Add <code>avoParams</code> to the user profile and broadcast it in room state.</p>
+        <pre class="code-block"><code>{
+  name: 'Han',      // display name; seeds personality
+  variant: 0,       // re-roll look without renaming
+  hue: 193,         // from Avo.PALETTE only (theme-harmonic)
+  style: 'blob',    // 'blob' | 'ring' | 'wave'
+  energy: 0.6       // 0.1–1, voice reactivity strength
+}</code></pre>
+      </div>
+
+      <div class="integrate-block">
+        <h3>3 · Mount in the participant tile</h3>
+        <p class="integrate-note">Replace the gray silhouette with an empty holder div sized to the tile.</p>
+        <pre class="code-block"><code>&lt;div class="participant-tile"&gt;
+  &lt;div class="avo-holder"&gt;&lt;/div&gt;
+  &lt;span class="name"&gt;Han&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+        <pre class="code-block"><code>const avo = Avo.mount(tile.querySelector('.avo-holder'), {
+  params: participant.avoParams,
+  scale: 0.62,
+  getLevel: () => participant.audioLevel,  // 0..1 per participant (LiveKit etc.)
+  onSpeaking: (s) => tile.classList.toggle('speaking', s),
+  interactive: participant.isLocal,        // hover / pet / click for local user only
+});
+
+// lifecycle
+avo.setParams(newParams);  // room state updated
+avo.pop();                 // remote "nudge" on click
+avo.destroy();             // participant left</code></pre>
+      </div>
+
+      <div class="integrate-block">
+        <h3>4 · Settings page</h3>
+        <p class="integrate-note">
+          This page is the template. On every control change, call
+          <code>avo.setParams(params)</code> and save to your API
+          (replace demo <code>Avo.saveParams()</code> / localStorage).
+        </p>
+        <pre class="code-block"><code>async function apply(patch) {
+  params = { ...params, ...patch };
+  avo.setParams(params);           // live preview
+}
+
+async function saveAvo() {
+  await api.patchUser({ avoParams: params });  // active avatar for room
+  // optional: Avo.saveToLibrary(params) for preset slots in demo
+}
+
+// shuffle: Avo.randomParams(name)  ·  colors: Avo.PALETTE  ·  styles: Avo.STYLES
+// backup: Avo.exportToFile(params)  ·  Avo.importFromFile(file)</code></pre>
+      </div>
+
+      <div class="integrate-block">
+        <h3>5 · Room sync</h3>
+        <pre class="code-block"><code>// when someone saves settings
+room.broadcast({ type: 'avo-update', userId, avoParams });
+
+// all clients
+onRoomEvent(({ userId, avoParams }) => {
+  handles.get(userId)?.setParams(avoParams);
+});</code></pre>
+      </div>
+
+      <div class="integrate-block">
+        <h3>6 · Expression states</h3>
+        <table class="integrate-table">
+          <thead><tr><th>State</th><th>Trigger</th><th>API</th></tr></thead>
+          <tbody>
+            <tr><td>Idle</td><td>Default</td><td>—</td></tr>
+            <tr><td>Speaking</td><td>Audio level &gt; 0.05</td><td><code>getLevel()</code></td></tr>
+            <tr><td>Curious</td><td>Cursor over body</td><td>built-in (local, interactive)</td></tr>
+            <tr><td>Petted</td><td>Rub cursor / touch</td><td><code>avo.pet()</code></td></tr>
+            <tr><td>Poked</td><td>Click tile</td><td><code>avo.pop()</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="integrate-block">
+        <h3>Checklist</h3>
+        <ol class="integrate-checklist">
+          <li>Add <code>avoParams</code> to user profile in DB / API</li>
+          <li>Include p5.js + <code>avo.js</code> in app assets</li>
+          <li>Replace silhouette with <code>.avo-holder</code> in each participant tile</li>
+          <li><code>Avo.mount()</code> on join · <code>setParams()</code> on updates · <code>destroy()</code> on leave</li>
+          <li>Feed each tile's <code>getLevel()</code> from that participant's real audio level</li>
+          <li>Port this settings UI — save to API instead of localStorage</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <script src="lib/p5.min.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/avo.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>
