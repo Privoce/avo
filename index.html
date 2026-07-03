@@ -161,7 +161,32 @@ async function saveAvo() {
       </div>
 
       <div class="integrate-block">
-        <h3>5 · Room sync</h3>
+        <h3>5 · Save &amp; load</h3>
+        <p class="integrate-note">
+          The demo persists to localStorage; in VoceSpace, swap those calls for
+          your API — the data shapes stay the same. Always run received or
+          imported params through <code>Avo.normalizeParams()</code>.
+        </p>
+        <pre class="code-block"><code>// active avatar — what the room renders for this user
+Avo.saveParams(params);                       // demo · prod: api.patchUser({ avoParams })
+const params = Avo.loadParams() ?? Avo.DEFAULTS;  // on settings/room load
+
+// saved library (the preset slots on this page, max 12)
+const entry = Avo.saveToLibrary(params, label);   // saves + sets active
+Avo.listSaved();                                  // [{ id, label, params, savedAt }]
+Avo.deleteSaved(entry.id);
+// "Load" = Avo.normalizeParams(entry.params) → avo.setParams() + save active
+
+// static preview for lists (one frame, no animation loop)
+const png = await Avo.snapshot(params, 168);      // PNG dataURL
+
+// share / backup as .avo.json
+Avo.exportToFile(params);
+const imported = await Avo.importFromFile(file);  // validated + clamped</code></pre>
+      </div>
+
+      <div class="integrate-block">
+        <h3>6 · Room sync</h3>
         <pre class="code-block"><code>// when someone saves settings
 room.broadcast({ type: 'avo-update', userId, avoParams });
 
@@ -172,7 +197,7 @@ onRoomEvent(({ userId, avoParams }) => {
       </div>
 
       <div class="integrate-block">
-        <h3>6 · Expression states</h3>
+        <h3>7 · Expression states</h3>
         <table class="integrate-table">
           <thead><tr><th>State</th><th>Trigger</th><th>API</th></tr></thead>
           <tbody>
@@ -194,6 +219,8 @@ onRoomEvent(({ userId, avoParams }) => {
           <li><code>Avo.mount()</code> on join · <code>setParams()</code> on updates · <code>destroy()</code> on leave</li>
           <li>Feed each tile's <code>getLevel()</code> from that participant's real audio level</li>
           <li>Port this settings UI — save to API instead of localStorage</li>
+          <li>On load: <code>loadParams()</code> (or API) → <code>Avo.mount()</code> · on Save: persist + broadcast</li>
+          <li>Normalize any received / imported params with <code>Avo.normalizeParams()</code></li>
         </ol>
       </div>
     </section>

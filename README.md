@@ -59,9 +59,17 @@ avo.pop();                 // remote "nudge" gesture
 avo.destroy();             // participant left
 ```
 
-Other API surface: `Avo.PALETTE` / `Avo.STYLES` (build your own pickers),
-`Avo.randomParams(name)` (harmonic shuffle), `Avo.loadParams()` /
-`Avo.saveParams(p)` (localStorage persistence used by the demo pages).
+Other API surface:
+
+- `Avo.PALETTE` / `Avo.STYLES` — build your own pickers
+- `Avo.randomParams(name)` — harmonic shuffle
+- `Avo.loadParams()` / `Avo.saveParams(p)` — active avatar (localStorage in the
+  demo; swap for your API in production)
+- `Avo.saveToLibrary(p, label?)` / `Avo.listSaved()` / `Avo.deleteSaved(id)` —
+  saved-Avo library (preset slots, max 12)
+- `Avo.snapshot(p, size?)` — static one-frame PNG dataURL for previews/lists
+- `Avo.exportToFile(p)` / `Avo.importFromFile(file)` — share as `.avo.json`
+- `Avo.normalizeParams(p)` — validate/clamp any received or imported params
 
 ## Files
 
